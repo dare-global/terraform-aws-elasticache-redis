@@ -25,8 +25,9 @@ resource "aws_elasticache_replication_group" "redis" {
   at_rest_encryption_enabled = var.global_replication_group_id == null ? var.at_rest_encryption_enabled : null
   transit_encryption_enabled = var.global_replication_group_id == null ? var.transit_encryption_enabled : null
 
-  auth_token = var.auth_token
-  kms_key_id = var.at_rest_encryption_enabled ? var.kms_key_id : null
+  auth_token                 = var.auth_token
+  auth_token_update_strategy = var.auth_token_update_strategy
+  kms_key_id                 = var.at_rest_encryption_enabled ? var.kms_key_id : null
 
   global_replication_group_id = var.global_replication_group_id
 
