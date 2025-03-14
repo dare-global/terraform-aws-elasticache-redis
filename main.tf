@@ -7,7 +7,7 @@ resource "aws_elasticache_replication_group" "redis" {
   security_group_ids = concat(var.security_group_ids, [aws_security_group.redis.id])
 
   preferred_cache_cluster_azs = var.preferred_cache_cluster_azs
-  replication_group_id        = var.global_replication_group_id == null ? "${var.name_prefix}-redis" : "${var.name_prefix}-redis-replica"
+  replication_group_id        = var.global_replication_group_id == null ? (var.engine == "redis" ? "${var.name_prefix}-redis" : "${var.name_prefix}-valkey") : "${var.name_prefix}-redis-replica"
 
   node_type = var.global_replication_group_id == null ? var.node_type : null
 
@@ -57,7 +57,7 @@ resource "aws_elasticache_replication_group" "redis" {
 
   tags = merge(
     {
-      "Name" = "${var.name_prefix}-redis"
+      "Name" = var.engine == "redis" ? "${var.name_prefix}-redis" : "${var.name_prefix}-valkey"
     },
     var.tags,
   )
@@ -73,7 +73,7 @@ resource "random_id" "redis_pg" {
 }
 
 resource "aws_elasticache_parameter_group" "redis" {
-  name = var.parameter_group_name == null ? "${var.name_prefix}-redis-${random_id.redis_pg.hex}" : var.parameter_group_name
+  name = var.parameter_group_name == null ? (var.engine == "redis" ? "${var.name_prefix}-redis-${random_id.redis_pg.hex}" : "${var.name_prefix}-valkey-${random_id.redis_pg.hex}") : var.parameter_group_name
 
   family      = var.family
   description = var.description
@@ -97,7 +97,7 @@ resource "aws_elasticache_parameter_group" "redis" {
 }
 
 resource "aws_elasticache_subnet_group" "redis" {
-  name        = var.global_replication_group_id == null ? "${var.name_prefix}-redis-sg" : "${var.name_prefix}-redis-sg-replica"
+  name        = var.global_replication_group_id == null ? (var.engine == "redis" ? "${var.name_prefix}-redis-sg" : "${var.name_prefix}-valkey-sg") : "${var.name_prefix}-redis-sg-replica"
   subnet_ids  = var.subnet_ids
   description = var.description
 
@@ -105,7 +105,7 @@ resource "aws_elasticache_subnet_group" "redis" {
 }
 
 resource "aws_security_group" "redis" {
-  name_prefix = "${var.name_prefix}-redis-"
+  name_prefix = var.engine == "redis" ? "${var.name_prefix}-redis-" : "${var.name_prefix}-valkey-"
 
   description = "Elasticache Security Group ${var.name_prefix}"
 
@@ -113,7 +113,7 @@ resource "aws_security_group" "redis" {
 
   tags = merge(
     {
-      "Name" = "${var.name_prefix}-redis"
+      "Name" = var.engine == "redis" ? "${var.name_prefix}-redis" : "${var.name_prefix}-valkey"
     },
     var.tags
   )
