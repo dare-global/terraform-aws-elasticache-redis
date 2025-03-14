@@ -3,6 +3,12 @@ variable "name_prefix" {
   description = "The replication group identifier. This parameter is stored as a lowercase string."
 }
 
+variable "engine" {
+  type        = string
+  description = "Name of the cache engine to be used for the clusters in this replication group. Valid values are redis or valkey. Default is redis."
+  default     = "redis"
+}
+
 variable "num_cache_clusters" {
   type        = number
   default     = 1

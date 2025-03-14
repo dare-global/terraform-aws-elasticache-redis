@@ -1,5 +1,5 @@
 resource "aws_elasticache_replication_group" "redis" {
-  engine = var.global_replication_group_id == null ? "redis" : null
+  engine = var.global_replication_group_id == null ? var.engine : null
 
   parameter_group_name = var.global_replication_group_id == null ? aws_elasticache_parameter_group.redis.name : null
   subnet_group_name    = aws_elasticache_subnet_group.redis.name
