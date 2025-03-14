@@ -33,7 +33,8 @@ module "redis" {
 
 ## Examples
 
-* [Basic](https://github.com/dare-global/terraform-aws-elasticache-redis/tree/main/examples/basic)
+* [Redis](https://github.com/dare-global/terraform-aws-elasticache-redis/tree/main/examples/redis)
+* [Valkey](https://github.com/dare-global/terraform-aws-elasticache-redis/tree/main/examples/valkey)
 
 <!-- BEGIN_TF_DOCS -->
 ## Requirements
