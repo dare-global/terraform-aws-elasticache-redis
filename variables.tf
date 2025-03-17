@@ -91,7 +91,7 @@ variable "auto_minor_version_upgrade" {
 }
 
 variable "automatic_failover_enabled" {
-  default     = true
+  default     = null
   type        = bool
   description = "Specifies whether a read-only replica will be automatically promoted to read/write primary if the existing primary fails. If enabled, number_cache_clusters must be greater than 1. Must be enabled for Redis (cluster mode enabled) replication groups."
 }
