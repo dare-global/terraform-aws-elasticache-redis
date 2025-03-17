@@ -112,7 +112,7 @@ resource "aws_elasticache_parameter_group" "redis" {
 }
 
 resource "aws_elasticache_subnet_group" "redis" {
-  name        = var.global_replication_group_id == null ? (var.engine == "redis" ? "${var.name_prefix}-redis-sg-${random_id.redis_sg.hex}" : "${var.name_prefix}-valkey-sg-${random_id.redis_sh.hex}") : "${var.name_prefix}-redis-sg-replica-${random_id.redis_sg.hex}"
+  name        = var.global_replication_group_id == null ? (var.engine == "redis" ? "${var.name_prefix}-redis-sg-${random_id.redis_sg.hex}" : "${var.name_prefix}-valkey-sg-${random_id.redis_sg.hex}") : "${var.name_prefix}-redis-sg-replica-${random_id.redis_sg.hex}"
   subnet_ids  = var.subnet_ids
   description = var.description
 
