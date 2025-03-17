@@ -1,6 +1,11 @@
 resource "aws_elasticache_replication_group" "redis" {
   engine = var.global_replication_group_id == null ? var.engine : null
 
+  cluster_mode = var.cluster_mode
+
+  ip_discovery = var.ip_discovery
+  network_type = var.network_type
+
   parameter_group_name = var.global_replication_group_id == null ? aws_elasticache_parameter_group.redis.name : null
   subnet_group_name    = aws_elasticache_subnet_group.redis.name
 
@@ -18,12 +23,13 @@ resource "aws_elasticache_replication_group" "redis" {
   snapshot_window            = var.snapshot_window
   snapshot_retention_limit   = var.snapshot_retention_limit
   final_snapshot_identifier  = var.final_snapshot_identifier
-  automatic_failover_enabled = var.automatic_failover_enabled && var.num_cache_clusters >= 2 ? true : false
+  automatic_failover_enabled = var.multi_az_enabled || var.cluster_mode_enabled ? true : var.automatic_failover_enabled
   auto_minor_version_upgrade = var.auto_minor_version_upgrade
   multi_az_enabled           = var.multi_az_enabled
 
   at_rest_encryption_enabled = var.global_replication_group_id == null ? var.at_rest_encryption_enabled : null
   transit_encryption_enabled = var.global_replication_group_id == null ? var.transit_encryption_enabled : null
+  transit_encryption_mode    = var.global_replication_group_id == null ? var.transit_encryption_mode : null
 
   auth_token                 = var.auth_token
   auth_token_update_strategy = var.auth_token_update_strategy
@@ -45,13 +51,13 @@ resource "aws_elasticache_replication_group" "redis" {
   user_group_ids          = var.user_group_ids
 
   dynamic "log_delivery_configuration" {
-    for_each = var.log_delivery_configuration
+    for_each = { for k, v in var.log_delivery_configuration : k => v }
 
     content {
+      destination      = try(log_delivery_configuration.value.create_cloudwatch_log_group, true) && log_delivery_configuration.value.destination_type == "cloudwatch-logs" ? aws_cloudwatch_log_group.this[log_delivery_configuration.key].name : log_delivery_configuration.value.destination
       destination_type = log_delivery_configuration.value.destination_type
-      destination      = log_delivery_configuration.value.destination
       log_format       = log_delivery_configuration.value.log_format
-      log_type         = log_delivery_configuration.value.log_type
+      log_type         = try(log_delivery_configuration.value.log_type, log_delivery_configuration.key)
     }
   }
 
@@ -64,6 +70,15 @@ resource "aws_elasticache_replication_group" "redis" {
 }
 
 resource "random_id" "redis_pg" {
+  keepers = {
+    family      = var.family
+    description = var.description
+  }
+
+  byte_length = 2
+}
+
+resource "random_id" "redis_sg" {
   keepers = {
     family      = var.family
     description = var.description
@@ -97,11 +112,15 @@ resource "aws_elasticache_parameter_group" "redis" {
 }
 
 resource "aws_elasticache_subnet_group" "redis" {
-  name        = var.global_replication_group_id == null ? (var.engine == "redis" ? "${var.name_prefix}-redis-sg" : "${var.name_prefix}-valkey-sg") : "${var.name_prefix}-redis-sg-replica"
+  name        = var.global_replication_group_id == null ? (var.engine == "redis" ? "${var.name_prefix}-redis-sg-${random_id.redis_sg.hex}" : "${var.name_prefix}-valkey-sg-${random_id.redis_sh.hex}") : "${var.name_prefix}-redis-sg-replica-${random_id.redis_sg.hex}"
   subnet_ids  = var.subnet_ids
   description = var.description
 
   tags = var.tags
+
+  lifecycle {
+    create_before_destroy = true
+  }
 }
 
 resource "aws_security_group" "redis" {

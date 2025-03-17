@@ -97,15 +97,21 @@ variable "automatic_failover_enabled" {
 }
 
 variable "at_rest_encryption_enabled" {
-  default     = true
+  default     = null
   type        = bool
-  description = "Whether to enable encryption at rest."
+  description = "Whether to enable encryption at rest. When engine is redis, default is false. When engine is valkey, default is true."
 }
 
 variable "transit_encryption_enabled" {
   default     = true
   type        = bool
   description = "Whether to enable encryption in transit."
+}
+
+variable "transit_encryption_mode" {
+  description = "A setting that enables clients to migrate to in-transit encryption with no downtime. Valid values are preferred and required"
+  type        = string
+  default     = null
 }
 
 variable "apply_immediately" {
@@ -207,19 +213,13 @@ variable "global_replication_group_id" {
 }
 
 variable "log_delivery_configuration" {
-  type = list(object({
-    destination_type = string
-    destination      = string
-    log_format       = string
-    log_type         = string
-  }))
-
-  description = "Log Delivery configuration for the cluster."
-  default     = []
-
-  validation {
-    condition     = length(var.log_delivery_configuration) <= 2
-    error_message = "You can set 2 targets at most for log delivery options."
+  description = "(Redis OSS or Valkey) Specifies the destination and format of Redis OSS/Valkey SLOWLOG or Redis OSS/Valkey Engine Log"
+  type        = any
+  default = {
+    slow-log = {
+      destination_type = "cloudwatch-logs"
+      log_format       = "json"
+    }
   }
 }
 
@@ -245,4 +245,22 @@ variable "parameter_group_name" {
   type        = string
   default     = null
   description = "Parameter Group name. If not provided, it will use the module name"
+}
+
+variable "cluster_mode" {
+  description = "Specifies whether cluster mode is enabled or disabled. Valid values are enabled or disabled or compatible"
+  type        = string
+  default     = null
+}
+
+variable "ip_discovery" {
+  description = "The IP version to advertise in the discovery protocol. Valid values are `ipv4` or `ipv6`"
+  type        = string
+  default     = null
+}
+
+variable "network_type" {
+  description = "The IP versions for cache cluster connections. Valid values are `ipv4`, `ipv6` or `dual_stack`"
+  type        = string
+  default     = null
 }
