@@ -213,13 +213,19 @@ variable "global_replication_group_id" {
 }
 
 variable "log_delivery_configuration" {
-  description = "(Redis OSS or Valkey) Specifies the destination and format of Redis OSS/Valkey SLOWLOG or Redis OSS/Valkey Engine Log"
-  type        = any
-  default = {
-    slow-log = {
-      destination_type = "cloudwatch-logs"
-      log_format       = "json"
-    }
+  type = list(object({
+    destination_type = string
+    destination      = string
+    log_format       = string
+    log_type         = string
+  }))
+
+  description = "Log Delivery configuration for the cluster."
+  default     = []
+
+  validation {
+    condition     = length(var.log_delivery_configuration) <= 2
+    error_message = "You can set 2 targets at most for log delivery options."
   }
 }
 

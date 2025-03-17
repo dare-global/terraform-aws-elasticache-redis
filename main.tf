@@ -51,13 +51,13 @@ resource "aws_elasticache_replication_group" "redis" {
   user_group_ids          = var.user_group_ids
 
   dynamic "log_delivery_configuration" {
-    for_each = { for k, v in var.log_delivery_configuration : k => v }
+    for_each = var.log_delivery_configuration
 
     content {
-      destination      = try(log_delivery_configuration.value.create_cloudwatch_log_group, true) && log_delivery_configuration.value.destination_type == "cloudwatch-logs" ? aws_cloudwatch_log_group.this[log_delivery_configuration.key].name : log_delivery_configuration.value.destination
+      destination      = log_delivery_configuration.value.destination
       destination_type = log_delivery_configuration.value.destination_type
       log_format       = log_delivery_configuration.value.log_format
-      log_type         = try(log_delivery_configuration.value.log_type, log_delivery_configuration.key)
+      log_type         = log_delivery_configuration.value.log_type
     }
   }
 
