@@ -78,15 +78,6 @@ resource "random_id" "redis_pg" {
   byte_length = 2
 }
 
-resource "random_id" "redis_sg" {
-  keepers = {
-    family      = var.family
-    description = var.description
-  }
-
-  byte_length = 2
-}
-
 resource "aws_elasticache_parameter_group" "redis" {
   name = var.parameter_group_name == null ? (var.engine == "redis" ? "${var.name_prefix}-redis-${random_id.redis_pg.hex}" : "${var.name_prefix}-valkey-${random_id.redis_pg.hex}") : var.parameter_group_name
 
@@ -112,7 +103,7 @@ resource "aws_elasticache_parameter_group" "redis" {
 }
 
 resource "aws_elasticache_subnet_group" "redis" {
-  name        = var.global_replication_group_id == null ? (var.engine == "redis" ? "${var.name_prefix}-redis-sg-${random_id.redis_sg.hex}" : "${var.name_prefix}-valkey-sg-${random_id.redis_sg.hex}") : "${var.name_prefix}-redis-sg-replica-${random_id.redis_sg.hex}"
+  name        = var.global_replication_group_id == null ? (var.engine == "redis" ? "${var.name_prefix}-redis-sg" : "${var.name_prefix}-valkey-sg") : "${var.name_prefix}-redis-sg-replica"
   subnet_ids  = var.subnet_ids
   description = var.description
 
