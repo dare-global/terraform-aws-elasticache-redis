@@ -192,7 +192,7 @@ resource "aws_security_group_rule" "other_sg_ingress" {
 resource "aws_cloudwatch_log_group" "this" {
   for_each = { for k, v in var.log_delivery_configuration : k => v if try(v.destination_type, "") == "cloudwatch-logs" }
 
-  name              = "/aws/elasticache/${try(each.value.cloudwatch_log_group_name, local.replication_group_name, "")}"
+  name              = "/aws/elasticache/${try(each.value.cloudwatch_log_group_name, "${local.replication_group_name}-${each.key}", "")}"
   retention_in_days = try(each.value.cloudwatch_log_group_retention_in_days, 14)
   kms_key_id        = try(each.value.cloudwatch_log_group_kms_key_id, null)
   skip_destroy      = try(each.value.cloudwatch_log_group_skip_destroy, null)

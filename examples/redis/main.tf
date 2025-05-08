@@ -76,5 +76,9 @@ module "redis" {
       destination_type = "cloudwatch-logs"
       log_format       = "json"
     }
+    engine-log = {
+      destination_type = "cloudwatch-logs"
+      log_format       = "json"
+    }
   }
 }
