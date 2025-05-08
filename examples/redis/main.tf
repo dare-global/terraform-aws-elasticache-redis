@@ -70,4 +70,11 @@ module "redis" {
   tags = {
     Project = "Test"
   }
+
+  log_delivery_configuration = {
+    slow-log = {
+      destination_type = "cloudwatch-logs"
+      log_format       = "json"
+    }
+  }
 }

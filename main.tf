@@ -1,3 +1,6 @@
+locals {
+  replication_group_name = var.engine == "redis" ? "${var.name_prefix}-redis" : "${var.name_prefix}-valkey"
+}
 resource "aws_elasticache_replication_group" "redis" {
   engine = var.global_replication_group_id == null ? var.engine : null
 
@@ -51,19 +54,19 @@ resource "aws_elasticache_replication_group" "redis" {
   user_group_ids          = var.user_group_ids
 
   dynamic "log_delivery_configuration" {
-    for_each = var.log_delivery_configuration
+    for_each = { for k, v in var.log_delivery_configuration : k => v }
 
     content {
-      destination      = log_delivery_configuration.value.destination
+      destination      = try(log_delivery_configuration.value.create_cloudwatch_log_group, true) && log_delivery_configuration.value.destination_type == "cloudwatch-logs" ? aws_cloudwatch_log_group.this[log_delivery_configuration.key].name : log_delivery_configuration.value.destination
       destination_type = log_delivery_configuration.value.destination_type
       log_format       = log_delivery_configuration.value.log_format
-      log_type         = log_delivery_configuration.value.log_type
+      log_type         = try(log_delivery_configuration.value.log_type, log_delivery_configuration.key)
     }
   }
 
   tags = merge(
     {
-      "Name" = var.engine == "redis" ? "${var.name_prefix}-redis" : "${var.name_prefix}-valkey"
+      "Name" = local.replication_group_name
     },
     var.tags,
   )
@@ -181,4 +184,19 @@ resource "aws_security_group_rule" "other_sg_ingress" {
   protocol                 = "tcp"
   source_security_group_id = element(var.allowed_security_groups, count.index)
   security_group_id        = aws_security_group.redis.id
+}
+
+################################################################################
+# Cloudwatch Log Group
+################################################################################
+resource "aws_cloudwatch_log_group" "this" {
+  for_each = { for k, v in var.log_delivery_configuration : k => v if try(v.destination_type, "") == "cloudwatch-logs" }
+
+  name              = "/aws/elasticache/${try(each.value.cloudwatch_log_group_name, local.replication_group_name, "")}"
+  retention_in_days = try(each.value.cloudwatch_log_group_retention_in_days, 14)
+  kms_key_id        = try(each.value.cloudwatch_log_group_kms_key_id, null)
+  skip_destroy      = try(each.value.cloudwatch_log_group_skip_destroy, null)
+  log_group_class   = try(each.value.cloudwatch_log_group_class, null)
+
+  tags = var.tags
 }
